@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Carbon Footprint Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+        .activity-card {
+            transition: all 0.3s ease-in-out;
+        }
+        .remove-btn {
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+        }
+        .activity-card:hover .remove-btn {
+            opacity: 1;
+        }
+        .total-result {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .emissions-positive { color: #c2410c; }
+        .emissions-negative { color: #16a34a; }
+        .emissions-neutral { color: #4b5563; }
+        .source-btn {
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Comprehensive Carbon Footprint Calculator</h1>
+            <p class="mt-2 text-lg text-gray-600">A unified tool to calculate emissions, avoided emissions, and carbon sinks for any project.</p>
+        </header>
+
+        <div id="calculator-container">
+            <!-- Activities will be dynamically inserted here -->
+        </div>
+
+        <div class="text-center mt-6">
+            <button id="add-activity-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 ease-in-out">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                Add Project Activity
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="bg-white rounded-xl border border-gray-200 shadow-sm mt-10 p-6">
+            <h2 class="text-2xl font-bold text-center mb-6">Summary</h2>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span class="font-medium">Total Project Emissions</span>
+                    <span id="total-emissions" class="font-bold text-lg emissions-positive">0.00 kg CO2e</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <span class="font-medium">Total Avoided Emissions</span>
+                    <span id="total-avoided" class="font-bold text-lg emissions-negative">0.00 kg CO2e</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
+                    <span class="font-medium">Total Carbon Sinks (Sequestration)</span>
+                    <span id="total-sinks" class="font-bold text-lg emissions-negative">0.00 kg CO2e</span>
+                </div>
+                <hr class="my-4">
+                <div class="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+                    <span class="text-xl font-bold">Net Project Footprint</span>
+                    <span id="net-footprint" class="total-result emissions-neutral">0.00 kg CO2e</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates (hidden) -->
+    <div id="templates" class="hidden">
+        <!-- Activity Card Template -->
+        <div id="activity-template" class="activity-card bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
+            <div class="activity-header bg-gray-50 p-4 flex justify-between items-center">
+                <input type="text" class="activity-name text-xl font-semibold bg-transparent focus:bg-white focus:ring-1 rounded p-1 w-full" value="New Activity">
+                <button class="remove-btn remove-activity-btn ml-4 text-gray-500 hover:text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+            </div>
+            <div class="sources-container p-4"></div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 text-right">
+                <span class="font-semibold text-gray-700">Activity Subtotal:</span>
+                <span class="activity-subtotal font-bold ml-2 text-blue-600">0.00 kg CO2e</span>
+            </div>
+            <div class="p-4 border-t border-gray-200 text-center">
+                <span class="text-sm font-medium mr-2">Add Source:</span>
+                <div class="flex flex-wrap justify-center">
+                    <button data-type="transport" class="add-source-btn source-btn bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-blue-200">Transport</button>
+                    <button data-type="energy" class="add-source-btn source-btn bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-green-200">Energy</button>
+                    <button data-type="materials" class="add-source-btn source-btn bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-yellow-200">Materials</button>
+                    <button data-type="waste" class="add-source-btn source-btn bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-red-200">Waste</button>
+                    <button data-type="food" class="add-source-btn source-btn bg-orange-100 text-orange-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-orange-200">Food/Accom.</button>
+                    <button data-type="water" class="add-source-btn source-btn bg-cyan-100 text-cyan-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-cyan-200">Water</button>
+                    <button data-type="office" class="add-source-btn source-btn bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-indigo-200">Office/IT</button>
+                    <button data-type="avoided" class="add-source-btn source-btn bg-purple-100 text-purple-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-purple-200">Avoided</button>
+                    <button data-type="sink" class="add-source-btn source-btn bg-teal-100 text-teal-800 text-sm font-semibold px-3 py-1 rounded-full hover:bg-teal-200">Sink</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Source Templates -->
+        <div data-template="transport" class="source-item border p-3 rounded-lg mb-3 relative bg-blue-50 border-blue-200">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="car_petrol">Car (Petrol)</option>
+                    <option value="car_diesel">Car (Diesel)</option>
+                    <option value="car_cng">Car (CNG)</option>
+                    <option value="car_ev">Car (Electric)</option>
+                    <option value="moto">Motorcycle</option>
+                    <option value="bus">Public Bus</option>
+                    <option value="truck">Light Truck / Van</option>
+                    <option value="hgv">Heavy Goods Vehicle (HGV)</option>
+                    <option value="rail">Rail Travel</option>
+                    <option value="ferry">Ferry</option>
+                    <option value="air_domestic">Air Travel (Domestic)</option>
+                    <option value="air_short_haul">Air Travel (Short Haul Int'l)</option>
+                    <option value="air_long_haul">Air Travel (Long Haul Int'l)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Distance (km)">
+                <p class="source-result text-right font-medium text-sm text-blue-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+        
+        <div data-template="energy" class="source-item border p-3 rounded-lg mb-3 relative bg-green-50 border-green-200">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="grid_in">Grid Electricity (kWh)</option>
+                    <option value="grid_renewable">Grid Electricity (Renewable Mix) (kWh)</option>
+                    <option value="generator">Diesel Generator (Litres)</option>
+                    <option value="natural_gas">Natural Gas (kWh)</option>
+                    <option value="lpg">LPG / Propane (kg)</option>
+                    <option value="biomass">Biomass (kg)</option>
+                    <option value="solar_panel_mfg">Solar Panel Mfg (kW)</option>
+                    <option value="wind_turbine_mfg">Wind Turbine Mfg (kW)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Usage (unit)">
+                <p class="source-result text-right font-medium text-sm text-green-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+
+        <div data-template="materials" class="source-item border p-3 rounded-lg mb-3 relative bg-yellow-50 border-yellow-200">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="cement_opc">Cement (OPC) (kg)</option>
+                    <option value="cement_pcc">Cement (PCC) (kg)</option>
+                    <option value="sand">Sand/Gravel (kg)</option>
+                    <option value="steel">Steel (kg)</option>
+                    <option value="aluminum">Aluminum (kg)</option>
+                    <option value="glass">Glass (kg)</option>
+                    <option value="asphalt">Asphalt (kg)</option>
+                    <option value="pvc">PVC (kg)</option>
+                    <option value="plastic">Plastic Packaging (kg)</option>
+                    <option value="paper">Paper & Cardboard (kg)</option>
+                    <option value="textiles">Textiles (kg)</option>
+                    <option value="wood">Wood/Lumber (kg)</option>
+                    <option value="electronics">Electronics (units)</option>
+                    <option value="chemicals">Chemicals/Solvents (kg)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Amount (unit)">
+                <p class="source-result text-right font-medium text-sm text-yellow-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+        
+        <div data-template="waste" class="source-item border p-3 rounded-lg mb-3 relative bg-red-50 border-red-200">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="landfill">Organic Waste to Landfill (kg)</option>
+                    <option value="incineration">Waste to Incineration (kg)</option>
+                    <option value="waste_recycled">Recycled Waste (kg)</option>
+                    <option value="waste_composted">Composted Waste (kg)</option>
+                    <option value="hazardous_waste">Hazardous Waste (kg)</option>
+                    <option value="e_waste">Electronic Waste (kg)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Amount (kg)">
+                <p class="source-result text-right font-medium text-sm text-red-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+
+        <div data-template="food" class="source-item border p-3 rounded-lg mb-3 relative bg-orange-50 border-orange-200">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="hotel_stay">Hotel Stay (nights)</option>
+                    <option value="meal_veg_local">Vegetarian Meal (Local) (meals)</option>
+                    <option value="meal_veg_imported">Vegetarian Meal (Imported) (meals)</option>
+                    <option value="meal_nonveg_local">Non-Veg Meal (Local) (meals)</option>
+                    <option value="meal_nonveg_imported">Non-Veg Meal (Imported) (meals)</option>
+                    <option value="meal_vegan">Vegan Meal (meals)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Amount (unit)">
+                <p class="source-result text-right font-medium text-sm text-orange-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+
+        <div data-template="water" class="source-item border p-3 rounded-lg mb-3 relative bg-cyan-50 border-cyan-200">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="water_supply">Water Supply (m³)</option>
+                    <option value="water_treatment">Wastewater Treatment (m³)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Amount (m³)">
+                <p class="source-result text-right font-medium text-sm text-cyan-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+        
+        <div data-template="office" class="source-item border p-3 rounded-lg mb-3 relative bg-indigo-50 border-indigo-200">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="office_paper">Office Paper (reams)</option>
+                    <option value="employee_commute">Employee Commute (km)</option>
+                    <option value="office_equipment">Office Equipment (kWh)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Amount (unit)">
+                <p class="source-result text-right font-medium text-sm text-indigo-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+
+        <div data-template="avoided" class="source-item border p-3 rounded-lg mb-3 relative bg-purple-50 border-purple-200">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="solar_drying">Solar Drying vs Electric (kg)</option>
+                    <option value="teleconference">Teleconference vs Travel (km)</option>
+                    <option value="led_lighting">LED vs Incandescent (kWh saved)</option>
+                    <option value="recycled_aluminum">Recycled vs Virgin Aluminum (kg)</option>
+                    <option value="water_recycling">Water Recycling (m³)</option>
+                    <option value="digital_docs">Digital vs Paper Docs (reams)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Amount (unit)">
+                <p class="source-result text-right font-medium text-sm text-purple-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+        
+        <div data-template="sink" class="source-item border p-3 rounded-lg mb-3 relative bg-teal-50 border-teal-200">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select class="source-subtype bg-white border border-gray-300 rounded-md shadow-sm p-2">
+                    <option value="afforestation">Afforestation/Reforestation (Hectares)</option>
+                    <option value="agroforestry">Agroforestry (Hectares)</option>
+                    <option value="pasture_management">Improved Pasture Management (Hectares)</option>
+                    <option value="soil_sequestration">Soil Carbon Sequestration (Hectares)</option>
+                    <option value="wetland_restoration">Wetland Restoration (Hectares)</option>
+                    <option value="mangrove_restoration">Mangrove Restoration (Hectares)</option>
+                    <option value="seagrass_restoration">Seagrass Restoration (Hectares)</option>
+                    <option value="seaweed_farming">Seaweed (Macroalgae) Farming (Hectares)</option>
+                    <option value="bivalve_farming">Bivalve (Shellfish) Farming (Tonnes)</option>
+                    <option value="biochar">Biochar Application (Tonnes)</option>
+                </select>
+                <input type="number" class="source-value mt-2 md:mt-0 bg-white border border-gray-300 rounded-md shadow-sm p-2" placeholder="Amount (unit)">
+                <p class="source-result text-right font-medium text-sm text-teal-700">0.00 kg CO2e</p>
+            </div>
+            <button class="remove-btn remove-source-btn absolute -top-2 -right-2 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const EF = {
+                // Materials (kg CO2e per kg, unless specified)
+                cement_opc: 0.83, cement_pcc: 0.65, sand: 0.01,
+                steel: 1.85, aluminum: 8.24, glass: 0.85, asphalt: 0.05, pvc: 2.0, plastic: 2.3, paper: 0.7, textiles: 9.0, wood: 0.42,
+                electronics: 250, // per unit (e.g., laptop)
+                chemicals: 2.5, // generic factor
+                
+                // Energy (kg CO2e per unit)
+                grid_in: 0.82, // per kWh India Avg
+                grid_renewable: 0.1, // per kWh for a high-renewable mix
+                generator: 2.68, // per litre
+                natural_gas: 0.202, // per kWh
+                lpg: 3.0, // per kg
+                biomass: 0.1, // net emissions per kg
+                solar_panel_mfg: 500, // per kW of panels
+                wind_turbine_mfg: 15, // per kW of turbine
+
+                // Transport (kg CO2e per passenger-km)
+                car_petrol: 0.19, car_diesel: 0.17, car_cng: 0.12, car_ev: 0.05, // EV factor depends on grid
+                truck: 0.21, hgv: 1.2, moto: 0.09, bus: 0.03, 
+                rail: 0.04, ferry: 0.12,
+                air_domestic: 0.25,
+                air_short_haul: 0.15,
+                air_long_haul: 0.14,
+
+                // Waste (kg CO2e per kg)
+                landfill: 0.5, incineration: 1.0, hazardous_waste: 3.0,
+                waste_recycled: 0.1, 
+                waste_composted: 0.02,
+                e_waste: 1.5,
+
+                // Food & Accommodation (kg CO2e per unit)
+                hotel_stay: 25, // per night
+                meal_veg_local: 2.0, meal_veg_imported: 3.5,
+                meal_nonveg_local: 6.0, meal_nonveg_imported: 9.0,
+                meal_vegan: 1.5, // per meal
+
+                // Water (kg CO2e per cubic meter)
+                water_supply: 1.0,
+                water_treatment: 0.7,
+
+                // Office & IT
+                office_paper: 5.0, // per ream (500 sheets)
+                employee_commute: 0.17, // assumes avg car km
+                office_equipment: 0.82, // per kWh
+
+                // Avoidance (based on displaced emissions)
+                solar_drying: 0.5 * 0.82, // (kWh/kg) * (kgCO2e/kWh)
+                teleconference: 0.17, // Assumes displacing car travel (kg CO2e per km)
+                led_lighting: (0.82 * 0.85), // (kgCO2e/kWh) * (85% energy saving)
+                recycled_aluminum: 8.24 * 0.95, // (virgin EF) * (95% saving)
+                water_recycling: 1.0, // vs fresh supply (per m³)
+                digital_docs: 5.0, // vs paper (per ream)
+
+                // Sinks (Sequestration - Negative values)
+                afforestation: -20000, // kg CO2e per hectare per year
+                agroforestry: -8000,
+                pasture_management: -2000,
+                soil_sequestration: -600, 
+                wetland_restoration: -10000,
+                mangrove_restoration: -12000,
+                seagrass_restoration: -15000,
+                seaweed_farming: -18000,
+                bivalve_farming: -250, // per tonne of harvest
+                biochar: -2500 // kg CO2e per tonne of biochar applied
+            };
+
+            const calculatorContainer = document.getElementById('calculator-container');
+            const templates = document.getElementById('templates');
+            const addActivityBtn = document.getElementById('add-activity-btn');
+
+            let activityCounter = 0;
+
+            const calculateAll = () => {
+                let totalEmissions = 0;
+                let totalAvoided = 0;
+                let totalSinks = 0;
+
+                document.querySelectorAll('.activity-card').forEach(activityCard => {
+                    let activitySubtotal = 0;
+                    activityCard.querySelectorAll('.source-item').forEach(sourceItem => {
+                        const subtype = sourceItem.querySelector('.source-subtype').value;
+                        const value = parseFloat(sourceItem.querySelector('.source-value').value) || 0;
+                        const efKey = subtype;
+                        
+                        let result = 0;
+                        if (EF[efKey] !== undefined) {
+                           result = value * EF[efKey];
+                        }
+                        
+                        const isSink = sourceItem.dataset.template === 'sink';
+                        if (isSink) {
+                            sourceItem.querySelector('.source-result').textContent = `${result.toFixed(2)} kg CO2e`;
+                        } else {
+                            sourceItem.querySelector('.source-result').textContent = `${Math.abs(result).toFixed(2)} kg CO2e`;
+                        }
+
+                        if (sourceItem.dataset.template === 'avoided') {
+                           activitySubtotal -= result;
+                           totalAvoided += result;
+                        } else if (isSink) {
+                           activitySubtotal += result; // result is already negative
+                           totalSinks += Math.abs(result);
+                        }
+                        else {
+                           activitySubtotal += result;
+                           totalEmissions += result;
+                        }
+                    });
+                    activityCard.querySelector('.activity-subtotal').textContent = `${activitySubtotal.toFixed(2)} kg CO2e`;
+                });
+
+                const netFootprint = totalEmissions - totalAvoided - totalSinks;
+                
+                document.getElementById('total-emissions').textContent = `${totalEmissions.toFixed(2)} kg CO2e`;
+                document.getElementById('total-avoided').textContent = `${totalAvoided.toFixed(2)} kg CO2e`;
+                document.getElementById('total-sinks').textContent = `${totalSinks.toFixed(2)} kg CO2e`;
+                const netEl = document.getElementById('net-footprint');
+                netEl.textContent = `${netFootprint.toFixed(2)} kg CO2e`;
+                
+                netEl.classList.remove('emissions-positive', 'emissions-negative', 'emissions-neutral');
+                if (netFootprint > 0.01) netEl.classList.add('emissions-positive');
+                else if (netFootprint < -0.01) netEl.classList.add('emissions-negative');
+                else netEl.classList.add('emissions-neutral');
+            };
+
+            const addEventListeners = (element) => {
+                element.querySelectorAll('input, select').forEach(input => {
+                    input.addEventListener('input', calculateAll);
+                });
+
+                element.querySelectorAll('.remove-activity-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.currentTarget.closest('.activity-card').remove();
+                        calculateAll();
+                    });
+                });
+
+                element.querySelectorAll('.add-source-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const type = e.currentTarget.dataset.type;
+                        const sourceTemplate = templates.querySelector(`[data-template="${type}"]`);
+                        if (sourceTemplate) {
+                            const newSource = sourceTemplate.cloneNode(true);
+                            newSource.dataset.template = type;
+                            e.currentTarget.closest('.activity-card').querySelector('.sources-container').appendChild(newSource);
+                            addEventListeners(newSource);
+                            calculateAll();
+                        }
+                    });
+                });
+                
+                element.querySelectorAll('.remove-source-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.currentTarget.closest('.source-item').remove();
+                        calculateAll();
+                    });
+                });
+            };
+
+            addActivityBtn.addEventListener('click', () => {
+                activityCounter++;
+                const activityTemplate = templates.querySelector('#activity-template');
+                const newActivity = activityTemplate.cloneNode(true);
+                newActivity.id = `activity-${activityCounter}`;
+                newActivity.querySelector('.activity-name').value = `New Activity ${activityCounter}`;
+                calculatorContainer.appendChild(newActivity);
+                addEventListeners(newActivity);
+                calculateAll();
+            });
+            
+            // Start with one activity
+            addActivityBtn.click();
+        });
+    </script>
+</body>
+</html>
